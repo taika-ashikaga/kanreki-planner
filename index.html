@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お父様の還暦祝いを彩る宿選びプランナー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FDFBF8; /* Warm off-white */
+            color: #3a3a3a;
+        }
+        .bg-primary { background-color: #FDFBF8; }
+        .bg-secondary { background-color: #F7F3EE; }
+        .text-accent { color: #A42A28; } /* Celebration Red */
+        .border-accent { border-color: #A42A28; }
+        .bg-accent { background-color: #A42A28; }
+        .bg-accent-light { background-color: #D3B8B8; }
+        .modal {
+            transition: opacity 0.25s ease;
+        }
+        .modal-content {
+            transition: transform 0.25s ease;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            width: 100%;
+            max-width: 800px;
+            max-height: 400px;
+        }
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-primary">
+
+    <div id="app" class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-accent mb-2">お父様の還暦祝いを彩る宿選びプランナー</h1>
+            <p class="text-lg text-gray-600">ご要望に沿った愛知・岐阜・三重の厳選宿をインタラクティブに比較・検討できます。</p>
+        </header>
+
+        <section id="filters" class="mb-8 p-4 bg-secondary rounded-lg shadow-sm">
+            <div class="flex flex-wrap items-center justify-center gap-4">
+                <span class="font-bold mr-4">エリアで絞り込み:</span>
+                <button data-filter="all" class="btn filter-btn bg-accent text-white py-2 px-4 rounded-full shadow-md">すべて</button>
+                <button data-filter="三重県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">三重県</button>
+                <button data-filter="岐阜県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">岐阜県</button>
+                <button data-filter="愛知県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">愛知県</button>
+            </div>
+        </section>
+
+        <main id="hotel-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        </main>
+
+        <section id="comparison-chart" class="bg-secondary p-4 md:p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold text-center mb-6 text-accent">特徴比較チャート</h2>
+            <p class="text-center text-gray-600 mb-6">各宿の強みを「還暦祝いサービス」「食事の特別感」「観光の利便性」「雰囲気」の4つの観点から評価しました。（5点満点）</p>
+            <div class="chart-container">
+                <canvas id="hotelChart"></canvas>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
+        <div id="modal-content" class="modal-content bg-primary rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform scale-95">
+        </div>
+    </div>
+    
+    <script>
+        const hotelData = [
+            {
+                id: 1,
+                name: "天然温泉と漁師の宿 浜栄",
+                prefecture: "三重県",
+                location: "鳥羽市",
+                price: "23,100円〜",
+                tagline: "卓越した海の幸で祝う親孝行旅",
+                celebration: {
+                    title: "🎁 親孝行応援＆鯛姿焼きサービス",
+                    details: "お祝いの席を彩る「鯛の姿焼き」がグループに一尾提供されます。還暦祝いの象徴である赤いちゃんちゃんこ、帽子、座布団の無料貸し出しも完備。プラン名が示す通り、家族のお祝いを温かくサポートしてくれます。"
+                },
+                facility: "「美人の湯」として知られる榊原温泉の湯を使用。趣の異なる2つの貸切露天風呂があり、プラン利用者は無料で一度利用可能です。家族水入らずで温泉を満喫できます。",
+                meals: "夕食は漁師宿ならではの豪華な舟盛りを含む季節の会席料理。さらに、1人につき伊勢海老1尾と鮑1個が提供される豪華な内容で、お祝いの席を華やかにします。",
+                drinks: {
+                    available: false,
+                    note: "飲み放題コースはありませんが、口コミでは「お酒の種類も多く満足」との声もあり、地酒などをアラカルトで十分に楽しめます。"
+                },
+                tourism: [
+                    { name: "神明神社（石神さん）", distance: "徒歩約7分" },
+                    { name: "志摩スペイン村", distance: "車で約15分" },
+                    { name: "鳥羽水族館", distance: "車で約25分" },
+                    { name: "伊勢神宮（内宮）", distance: "車で約35～50分" },
+                ],
+                scores: { celebration: 5, food: 5, tourism: 4, atmosphere: 4 },
+                link: "http://www.hamaei.com/"
+            },
+            {
+                id: 2,
+                name: "山里のいおり 草円",
+                prefecture: "岐阜県",
+                location: "高山市 奥飛騨温泉郷",
+                price: "20,000円〜",
+                tagline: "古民家の囲炉裏を囲む、趣深い祝宴",
+                celebration: {
+                    title: "🎁 感謝を伝えるお手伝いプラン",
+                    details: "還暦祝いでの予約と伝えると、宿が「感謝の気持ちを伝えるお手伝い」をしてくれます。画一的でない、個別の要望に合わせたパーソナルな祝宴を演出してくれることが期待できます。"
+                },
+                facility: "国の有形文化財にも指定された飛騨の古民家を移築再生した、趣深い宿。自家源泉かけ流しの温泉は、森を望む露天風呂や3つの貸切露天風呂で楽しめます。",
+                meals: "食事は伝統的な囲炉裏を囲んで。飛騨牛や地元の幸、釜戸で炊いたご飯など、ここでしか味わえない本格的な料理が提供されます。日本酒メニューも豊富です。",
+                drinks: {
+                    available: false,
+                    note: "飲み放題はありませんが、「骨酒など日本酒メニューも豊富」との口コミがあり、お酒好きのお父様も満足できる質の高いお酒が揃っています。"
+                },
+                tourism: [
+                    { name: "平湯温泉エリア", distance: "車で約10～15分" },
+                    { name: "新穂高ロープウェイ", distance: "車で約15分" },
+                    { name: "上高地（バス乗換）", distance: "車+バスで約45分" },
+                    { name: "高山市街（古い町並）", distance: "車で約60分" },
+                ],
+                scores: { celebration: 4, food: 5, tourism: 4, atmosphere: 5 },
+                link: "https://www.soene.com/"
+            },
+            {
+                id: 3,
+                name: "寿亭",
+                prefecture: "三重県",
+                location: "菰野町 湯の山温泉",
+                price: "18,700円〜",
+                tagline: "特製大杯で乾杯！ユニークな祝宴体験",
+                celebration: {
+                    title: "🎁 寿亭ならではのお祝いプラン",
+                    details: "ちゃんちゃんこの貸し出しに加え、特製の「大杯」（直径約30cm）での乾杯というユニークなサービスが特徴。他にはない楽しい思い出になります。記念写真の撮影も手伝ってくれます。"
+                },
+                facility: "創業110年を超える老舗旅館。露天風呂からは御在所岳やロープウェイの絶景が楽しめます。貸切風呂もあり、プライベートな入浴も可能です。",
+                meals: "地産地消を信条とした「三重の味」を堪能できる創作和会席。夕食は部屋食または個室でいただけるため、ご家族だけのプライベートな空間でお祝いができます。",
+                drinks: {
+                    available: false,
+                    note: "飲み放題の記述はありません。お祝いの会席料理に合わせた質の高い飲み物が中心となります。"
+                },
+                tourism: [
+                    { name: "御在所ロープウェイ", distance: "至近" },
+                    { name: "御在所岳", distance: "至近" },
+                    { name: "椿大神社", distance: "車で約20分" },
+                ],
+                scores: { celebration: 5, food: 4, tourism: 5, atmosphere: 4 },
+                link: "http://www.kotobukitei.co.jp/"
+            },
+            {
+                id: 4,
+                name: "湯谷温泉 はづ木",
+                prefecture: "愛知県",
+                location: "新城市",
+                price: "22,000円〜",
+                tagline: "漢方薬膳懐石で祝う、心と身体への贈り物",
+                celebration: {
+                    title: "🎁 大切な人と大切な時間を過ごす記念日プラン",
+                    details: "結婚記念・誕生日・還暦祝い向けの専用プランが用意されています。全5室の小さな宿ならではの、きめ細やかで静かなお祝いが期待できます。"
+                },
+                facility: "全5室の静かで落ち着いた宿。源泉かけ流しの温泉でゆったりと過ごせます。",
+                meals: "「美と健康の漢方薬膳懐石」がこの宿最大の特徴。健康や長寿を祝う還暦のテーマと親和性が高く、他にはないユニークな食体験を提供します。",
+                drinks: {
+                    available: false,
+                    note: "飲み放題の提供は期待薄です。健康をテーマにした薬膳懐石とのペアリングを楽しむスタイルとなります。"
+                },
+                tourism: [
+                    { name: "鳳来寺山・鳳来寺", distance: "車で約10分" },
+                    { name: "鳳来山東照宮", distance: "車で約10分" },
+                    { name: "阿寺の七滝", distance: "車で約15分" },
+                ],
+                scores: { celebration: 4, food: 5, tourism: 3, atmosphere: 5 },
+                link: "http://www.hazu.co.jp/hazuki/"
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('hotel-grid');
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modal-content');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            let activeFilter = 'all';
+
+            function renderCards() {
+                grid.innerHTML = '';
+                const filteredData = hotelData.filter(hotel => activeFilter === 'all' || hotel.prefecture === activeFilter);
+
+                if (filteredData.length === 0) {
+                    grid.innerHTML = `<p class="text-center text-gray-500 col-span-full">このエリアに該当する宿はありません。</p>`;
+                } else {
+                    filteredData.forEach(hotel => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer';
+                        card.innerHTML = `
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h3 class="text-xl font-bold text-accent">${hotel.name}</h3>
+                                    <span class="text-sm font-semibold bg-accent-light text-accent px-3 py-1 rounded-full">${hotel.prefecture}</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">${hotel.location}</p>
+                                <p class="text-lg font-semibold text-gray-800 mb-4">"${hotel.tagline}"</p>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xl font-bold text-gray-700">${hotel.price}</span>
+                                    <button class="details-btn btn bg-accent text-white py-2 px-4 rounded-full font-bold">詳細を見る</button>
+                                </div>
+                            </div>
+                        `;
+                        card.addEventListener('click', () => showModal(hotel));
+                        grid.appendChild(card);
+                    });
+                }
+                renderChart(filteredData);
+            }
+
+            function showModal(hotel) {
+                modalContent.innerHTML = `
+                    <div class="p-6 md:p-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-2xl md:text-3xl font-bold text-accent">${hotel.name}</h2>
+                                <p class="text-gray-600">${hotel.prefecture} ${hotel.location}</p>
+                            </div>
+                            <button id="close-modal" class="text-3xl text-gray-500 hover:text-accent">&times;</button>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">${hotel.celebration.title}</h4>
+                                <p class="text-gray-700">${hotel.celebration.details}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">🍶 お食事と飲み物</h4>
+                                <p class="text-gray-700 mb-2"><strong>食事:</strong> ${hotel.meals}</p>
+                                <p class="text-gray-700"><strong>飲み放題:</strong> <span class="${hotel.drinks.available ? 'text-green-600' : 'text-red-600'} font-bold">${hotel.drinks.available ? 'あり' : 'なし'}</span> ${hotel.drinks.note}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">♨️ 施設</h4>
+                                <p class="text-gray-700">${hotel.facility}</p>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">🏞️ 周辺観光</h4>
+                                <ul class="list-disc list-inside text-gray-700">
+                                    ${hotel.tourism.map(spot => `<li><strong>${spot.name}:</strong> ${spot.distance}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 text-center">
+                            <a href="${hotel.link}" target="_blank" rel="noopener noreferrer" class="btn inline-block bg-accent text-white py-3 px-8 rounded-full font-bold text-lg shadow-lg">公式サイトで確認する</a>
+                        </div>
+                    </div>
+                `;
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                modalContent.classList.remove('scale-95');
+                document.getElementById('close-modal').addEventListener('click', hideModal);
+            }
+
+            function hideModal() {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                modalContent.classList.add('scale-95');
+            }
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    hideModal();
+                }
+            });
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.replace('bg-accent','bg-white').classList.replace('text-white', 'text-black'));
+                    btn.classList.replace('bg-white','bg-accent').classList.replace('text-black','text-white');
+                    activeFilter = btn.dataset.filter;
+                    renderCards();
+                });
+            });
+
+            let hotelChart = null;
+            function renderChart(data) {
+                const ctx = document.getElementById('hotelChart').getContext('2d');
+                const labels = data.map(h => h.name);
+                const celebrationData = data.map(h => h.scores.celebration);
+                const foodData = data.map(h => h.scores.food);
+                const tourismData = data.map(h => h.scores.tourism);
+                const atmosphereData = data.map(h => h.scores.atmosphere);
+
+                if (hotelChart) {
+                    hotelChart.destroy();
+                }
+
+                hotelChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '還暦祝いサービス',
+                                data: celebrationData,
+                                backgroundColor: 'rgba(164, 42, 40, 0.7)',
+                                borderColor: 'rgba(164, 42, 40, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '食事の特別感',
+                                data: foodData,
+                                backgroundColor: 'rgba(211, 184, 184, 0.7)',
+                                borderColor: 'rgba(211, 184, 184, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '観光の利便性',
+                                data: tourismData,
+                                backgroundColor: 'rgba(90, 90, 90, 0.6)',
+                                borderColor: 'rgba(90, 90, 90, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '雰囲気',
+                                data: atmosphereData,
+                                backgroundColor: 'rgba(150, 150, 150, 0.6)',
+                                borderColor: 'rgba(150, 150, 150, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 5,
+                                grid: {
+                                    color: 'rgba(0,0,0,0.05)'
+                                }
+                            },
+                            y: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderCards();
+        });
+    </script>
+</body>
+</html>
