@@ -3,371 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>お父様の還暦祝いを彩る宿選びプランナー</title>
+    <title>還暦祝いにおすすめの宿 検索アプリケーション</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background-color: #FDFBF8; /* Warm off-white */
-            color: #3a3a3a;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #F8F7F4;
+            color: #383838;
         }
-        .bg-primary { background-color: #FDFBF8; }
-        .bg-secondary { background-color: #F7F3EE; }
-        .text-accent { color: #A42A28; } /* Celebration Red */
-        .border-accent { border-color: #A42A28; }
-        .bg-accent { background-color: #A42A28; }
-        .bg-accent-light { background-color: #D3B8B8; }
+        .filter-btn.active {
+            background-color: #006D77;
+            color: #ffffff;
+            border-color: #006D77;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .hotel-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .hotel-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
         .modal {
             transition: opacity 0.25s ease;
         }
         .modal-content {
             transition: transform 0.25s ease;
         }
-        .chart-container {
-            position: relative;
-            margin: auto;
-            height: 40vh;
-            width: 100%;
-            max-width: 800px;
-            max-height: 400px;
-        }
-        .btn {
-            transition: all 0.2s ease-in-out;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
     </style>
 </head>
-<body class="bg-primary">
+<body class="antialiased">
 
-    <div id="app" class="container mx-auto p-4 md:p-8">
+    <div class="container mx-auto p-4 md:p-8">
 
-        <header class="text-center mb-10">
-            <h1 class="text-3xl md:text-4xl font-bold text-accent mb-2">お父様の還暦祝いを彩る宿選びプランナー</h1>
-            <p class="text-lg text-gray-600">ご要望に沿った愛知・岐阜・三重の厳選宿をインタラクティブに比較・検討できます。</p>
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#006D77]">お父様の還暦祝いに最適な宿探し</h1>
+            <p class="mt-2 text-lg text-gray-600">ご希望の条件で、心に残るお祝いの旅を計画しましょう。</p>
         </header>
 
-        <section id="filters" class="mb-8 p-4 bg-secondary rounded-lg shadow-sm">
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <span class="font-bold mr-4">エリアで絞り込み:</span>
-                <button data-filter="all" class="btn filter-btn bg-accent text-white py-2 px-4 rounded-full shadow-md">すべて</button>
-                <button data-filter="三重県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">三重県</button>
-                <button data-filter="岐阜県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">岐阜県</button>
-                <button data-filter="愛知県" class="btn filter-btn bg-white py-2 px-4 rounded-full shadow-md">愛知県</button>
+        <div id="controls" class="bg-white p-6 rounded-xl shadow-md mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="font-bold text-gray-700 mb-2 block">都道府県</label>
+                    <div id="prefecture-filters" class="flex flex-wrap gap-2">
+                        <button class="filter-btn active w-full sm:w-auto flex-grow text-center px-4 py-2 border rounded-lg" data-filter="prefecture" data-value="all">すべて</button>
+                        <button class="filter-btn w-full sm:w-auto flex-grow text-center px-4 py-2 border rounded-lg" data-filter="prefecture" data-value="愛知">愛知県</button>
+                        <button class="filter-btn w-full sm:w-auto flex-grow text-center px-4 py-2 border rounded-lg" data-filter="prefecture" data-value="岐阜">岐阜県</button>
+                        <button class="filter-btn w-full sm:w-auto flex-grow text-center px-4 py-2 border rounded-lg" data-filter="prefecture" data-value="三重">三重県</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="budget-slider" class="font-bold text-gray-700 mb-2 block">ご予算 (1名あたり)</label>
+                    <input type="range" id="budget-slider" min="10000" max="30000" step="1000" value="25000" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="text-center mt-2 font-semibold text-[#006D77]">〜<span id="budget-value">25,000</span>円</div>
+                </div>
+                <div>
+                    <label class="font-bold text-gray-700 mb-2 block">こだわり条件</label>
+                    <div id="feature-filters" class="flex flex-wrap gap-2">
+                        <button class="filter-btn px-4 py-2 border rounded-lg" data-filter="feature" data-value="kanrekiPlan">🎉 還暦祝いプラン</button>
+                        <button class="filter-btn px-4 py-2 border rounded-lg" data-filter="feature" data-value="chanchanko">👘 ちゃんちゃんこ</button>
+                        <button class="filter-btn px-4 py-2 border rounded-lg" data-filter="feature" data-value="allYouCanDrink">🍻 飲み放題</button>
+                        <button class="filter-btn px-4 py-2 border rounded-lg" data-filter="feature" data-value="privateDining">🍽️ 個室食</button>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <main id="hotel-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        <div id="results-summary" class="text-center mb-8">
+             <p class="text-xl font-medium">該当する施設: <span id="results-count" class="font-bold text-[#006D77]">0</span>件</p>
+        </div>
+        
+        <main id="hotel-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         </main>
-
-        <section id="comparison-chart" class="bg-secondary p-4 md:p-8 rounded-lg shadow-lg">
-            <h2 class="text-2xl font-bold text-center mb-6 text-accent">特徴比較チャート</h2>
-            <p class="text-center text-gray-600 mb-6">各宿の強みを「還暦祝いサービス」「食事の特別感」「観光の利便性」「雰囲気」の4つの観点から評価しました。（5点満点）</p>
-            <div class="chart-container">
-                <canvas id="hotelChart"></canvas>
+        
+        <section id="chart-section" class="mt-12 bg-white p-6 rounded-xl shadow-md">
+             <h2 class="text-2xl font-bold text-center mb-4">価格帯の比較</h2>
+             <div class="chart-container">
+                <canvas id="budget-chart"></canvas>
             </div>
+            <p class="text-sm text-center text-gray-500 mt-4">各施設の1名あたりの最低料金（目安）を表示しています。料金はプランや時期により変動します。</p>
         </section>
 
     </div>
 
-    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 opacity-0 pointer-events-none">
-        <div id="modal-content" class="modal-content bg-primary rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto transform scale-95">
+    <div id="hotel-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none">
+        <div class="modal-content transform -translate-y-10 bg-white rounded-xl shadow-2xl w-11/12 md:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="sticky top-0 bg-white px-4 pt-4 pb-2 md:px-8 md:pt-6 md:pb-4 flex justify-between items-center border-b">
+                <h3 id="modal-title" class="text-xl md:text-2xl font-bold text-[#006D77]"></h3>
+                <button id="close-modal-btn" class="text-3xl text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            <div id="modal-body" class="p-4 md:p-8">
+            </div>
         </div>
     </div>
-    
+
     <script>
         const hotelData = [
-            {
-                id: 1,
-                name: "天然温泉と漁師の宿 浜栄",
-                prefecture: "三重県",
-                location: "鳥羽市",
-                price: "23,100円〜",
-                tagline: "卓越した海の幸で祝う親孝行旅",
-                celebration: {
-                    title: "🎁 親孝行応援＆鯛姿焼きサービス",
-                    details: "お祝いの席を彩る「鯛の姿焼き」がグループに一尾提供されます。還暦祝いの象徴である赤いちゃんちゃんこ、帽子、座布団の無料貸し出しも完備。プラン名が示す通り、家族のお祝いを温かくサポートしてくれます。"
-                },
-                facility: "「美人の湯」として知られる榊原温泉の湯を使用。趣の異なる2つの貸切露天風呂があり、プラン利用者は無料で一度利用可能です。家族水入らずで温泉を満喫できます。",
-                meals: "夕食は漁師宿ならではの豪華な舟盛りを含む季節の会席料理。さらに、1人につき伊勢海老1尾と鮑1個が提供される豪華な内容で、お祝いの席を華やかにします。",
-                drinks: {
-                    available: false,
-                    note: "飲み放題コースはありませんが、口コミでは「お酒の種類も多く満足」との声もあり、地酒などをアラカルトで十分に楽しめます。"
-                },
-                tourism: [
-                    { name: "神明神社（石神さん）", distance: "徒歩約7分" },
-                    { name: "志摩スペイン村", distance: "車で約15分" },
-                    { name: "鳥羽水族館", distance: "車で約25分" },
-                    { name: "伊勢神宮（内宮）", distance: "車で約35～50分" },
-                ],
-                scores: { celebration: 5, food: 5, tourism: 4, atmosphere: 4 },
-                link: "http://www.hamaei.com/"
-            },
-            {
-                id: 2,
-                name: "山里のいおり 草円",
-                prefecture: "岐阜県",
-                location: "高山市 奥飛騨温泉郷",
-                price: "20,000円〜",
-                tagline: "古民家の囲炉裏を囲む、趣深い祝宴",
-                celebration: {
-                    title: "🎁 感謝を伝えるお手伝いプラン",
-                    details: "還暦祝いでの予約と伝えると、宿が「感謝の気持ちを伝えるお手伝い」をしてくれます。画一的でない、個別の要望に合わせたパーソナルな祝宴を演出してくれることが期待できます。"
-                },
-                facility: "国の有形文化財にも指定された飛騨の古民家を移築再生した、趣深い宿。自家源泉かけ流しの温泉は、森を望む露天風呂や3つの貸切露天風呂で楽しめます。",
-                meals: "食事は伝統的な囲炉裏を囲んで。飛騨牛や地元の幸、釜戸で炊いたご飯など、ここでしか味わえない本格的な料理が提供されます。日本酒メニューも豊富です。",
-                drinks: {
-                    available: false,
-                    note: "飲み放題はありませんが、「骨酒など日本酒メニューも豊富」との口コミがあり、お酒好きのお父様も満足できる質の高いお酒が揃っています。"
-                },
-                tourism: [
-                    { name: "平湯温泉エリア", distance: "車で約10～15分" },
-                    { name: "新穂高ロープウェイ", distance: "車で約15分" },
-                    { name: "上高地（バス乗換）", distance: "車+バスで約45分" },
-                    { name: "高山市街（古い町並）", distance: "車で約60分" },
-                ],
-                scores: { celebration: 4, food: 5, tourism: 4, atmosphere: 5 },
-                link: "https://www.soene.com/"
-            },
-            {
-                id: 3,
-                name: "寿亭",
-                prefecture: "三重県",
-                location: "菰野町 湯の山温泉",
-                price: "18,700円〜",
-                tagline: "特製大杯で乾杯！ユニークな祝宴体験",
-                celebration: {
-                    title: "🎁 寿亭ならではのお祝いプラン",
-                    details: "ちゃんちゃんこの貸し出しに加え、特製の「大杯」（直径約30cm）での乾杯というユニークなサービスが特徴。他にはない楽しい思い出になります。記念写真の撮影も手伝ってくれます。"
-                },
-                facility: "創業110年を超える老舗旅館。露天風呂からは御在所岳やロープウェイの絶景が楽しめます。貸切風呂もあり、プライベートな入浴も可能です。",
-                meals: "地産地消を信条とした「三重の味」を堪能できる創作和会席。夕食は部屋食または個室でいただけるため、ご家族だけのプライベートな空間でお祝いができます。",
-                drinks: {
-                    available: false,
-                    note: "飲み放題の記述はありません。お祝いの会席料理に合わせた質の高い飲み物が中心となります。"
-                },
-                tourism: [
-                    { name: "御在所ロープウェイ", distance: "至近" },
-                    { name: "御在所岳", distance: "至近" },
-                    { name: "椿大神社", distance: "車で約20分" },
-                ],
-                scores: { celebration: 5, food: 4, tourism: 5, atmosphere: 4 },
-                link: "http://www.kotobukitei.co.jp/"
-            },
-            {
-                id: 4,
-                name: "湯谷温泉 はづ木",
-                prefecture: "愛知県",
-                location: "新城市",
-                price: "22,000円〜",
-                tagline: "漢方薬膳懐石で祝う、心と身体への贈り物",
-                celebration: {
-                    title: "🎁 大切な人と大切な時間を過ごす記念日プラン",
-                    details: "結婚記念・誕生日・還暦祝い向けの専用プランが用意されています。全5室の小さな宿ならではの、きめ細やかで静かなお祝いが期待できます。"
-                },
-                facility: "全5室の静かで落ち着いた宿。源泉かけ流しの温泉でゆったりと過ごせます。",
-                meals: "「美と健康の漢方薬膳懐石」がこの宿最大の特徴。健康や長寿を祝う還暦のテーマと親和性が高く、他にはないユニークな食体験を提供します。",
-                drinks: {
-                    available: false,
-                    note: "飲み放題の提供は期待薄です。健康をテーマにした薬膳懐石とのペアリングを楽しむスタイルとなります。"
-                },
-                tourism: [
-                    { name: "鳳来寺山・鳳来寺", distance: "車で約10分" },
-                    { name: "鳳来山東照宮", distance: "車で約10分" },
-                    { name: "阿寺の七滝", distance: "車で約15分" },
-                ],
-                scores: { celebration: 4, food: 5, tourism: 3, atmosphere: 5 },
-                link: "http://www.hazu.co.jp/hazuki/"
-            }
+            { id: 1, name: '西浦温泉 旬景浪漫 銀波荘', prefecture: '愛知', location: '蒲郡市', price: 18700, features: { kanrekiPlan: true, chanchanko: true, allYouCanDrink: true, privateDining: false }, description: '三河湾を一望できる絶景が自慢の旅館。記念日プランでは赤いちゃんちゃんこの貸出や祝い膳の手配が可能。「Premiumラウンジ」付き客室ではアルコールも楽しめます。', touristSpots: 'パームビーチ（目の前）、万葉の小径（徒歩3分）' },
+            { id: 2, name: '南知多温泉郷 源氏香', prefecture: '愛知', location: '南知多町', price: 22000, features: { kanrekiPlan: true, chanchanko: true, allYouCanDrink: false, privateDining: false }, description: '日本初の「香り」がテーマの和風旅館。長寿祝いプランではちゃんちゃんこやミニ花束が用意され、心温まるお祝いが期待できます。', touristSpots: '野間埼灯台（車で約10分）、日間賀島（港まで車15分＋船20分）' },
+            { id: 3, name: 'ヒルトン名古屋', prefecture: '愛知', location: '名古屋市', price: 25000, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: true }, description: '名古屋中心部の国際的ホテル。日本料理「源氏」には個室で利用できる長寿祝いプランがあり、洗練されたお祝いが可能です。（料金は要確認）', touristSpots: '名古屋城、徳川園など市内各所へ好アクセス' },
+            { id: 4, name: '天空海遊の宿 末広', prefecture: '愛知', location: '蒲郡市', price: 24200, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '記念日プランにはケーキやスパークリングワインが付きます。70周年記念プランなど、お祝い向けの選択肢が豊富です。', touristSpots: '竹島、ラグーナテンボスなど（車でアクセス）' },
+            { id: 5, name: '篠島離宮 真砂 悠々庵', prefecture: '愛知', location: '南知多町篠島', price: 25000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '離島・篠島にある静かな宿。新鮮な海の幸を堪能できます。特典付きプランの存在が示唆されており、記念日利用に適しています。（料金は要確認）', touristSpots: '篠島内のビーチ、釣りスポット' },
+            { id: 6, name: 'ホテルマイステイズプレミア金山', prefecture: '愛知', location: '名古屋市', price: 15000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: '金山総合駅近くの便利なホテル。「飲み放題付き」プランの記述があり、カジュアルなお祝いディナーを楽しみたい場合に適しています。（料金は食事プランによる）', touristSpots: '金山総合駅周辺の商業施設、熱田神宮' },
+            { id: 7, name: 'ホテルアークリッシュ豊橋', prefecture: '愛知', location: '豊橋市', price: 23000, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: true }, description: '豊橋駅直結の高層ホテル。レストランには記念日プランがあり、夜景を眺めながらスタイリッシュなお祝いが可能です。', touristSpots: '豊橋公園（吉田城址）、豊川稲荷' },
+            { id: 8, name: 'キャッスルプラザ', prefecture: '愛知', location: '名古屋市', price: 20000, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: true }, description: '名古屋駅近くの老舗ホテル。複数のレストランで記念日プランが用意されており、中華や和食などお好みに合わせたお祝いができます。', touristSpots: 'JRセントラルタワーズ、ミッドランドスクエア' },
+        
+            { id: 9, name: '奥飛騨温泉郷 山里のいおり 草円', prefecture: '岐阜', location: '高山市', price: 22110, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '古民家を再生した風情ある旅館。「お祝いは草円で！」という専用プランがあり、囲炉裏料理と共に心温まるお祝いができます。', touristSpots: '新穂高ロープウェイ（車で約20分）、飛騨高山（車で約60分）' },
+            { id: 10, name: '下呂温泉 紗々羅', prefecture: '岐阜', location: '下呂市', price: 18000, features: { kanrekiPlan: true, chanchanko: true, allYouCanDrink: false, privateDining: false }, description: 'アートな雰囲気の旅館。還暦祝いには赤いちゃんちゃんこを無料で貸し出しており、記念写真に最適です。', touristSpots: '下呂温泉合掌村、下呂温泉博物館（近隣）' },
+            { id: 11, name: '長良川温泉 十八楼', prefecture: '岐阜', location: '岐阜市', price: 15400, features: { kanrekiPlan: true, chanchanko: true, allYouCanDrink: false, privateDining: true }, description: '1860年創業の老舗旅館。お祝い会席プランがあり、ちゃんちゃんこセットの貸出も可能。半個室レストランで気兼ねなく楽しめます。', touristSpots: '岐阜城、川原町の古い町並み、長良川鵜飼（至近）' },
+            { id: 12, name: '滝元館 遊季の里', prefecture: '岐阜', location: '養老町', price: 28000, features: { kanrekiPlan: true, chanchanko: true, allYouCanDrink: false, privateDining: true }, description: '還暦祝いプランが非常に充実。祝懐石、ちゃんちゃんこ、記念写真、記念日新聞など、至れり尽くせりのサービスが魅力です。（予算は要確認）', touristSpots: '養老の滝、養老天命反転地' },
+            { id: 13, name: '長良川温泉 ホテルパーク', prefecture: '岐阜', location: '岐阜市', price: 20000, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: true }, description: '還暦プランでは夕食が部屋食で提供され、家族水入らずのお祝いが可能です。長良川の景色も楽しめます。（予算は要確認）', touristSpots: '岐阜城、金華山、長良川鵜飼（近接）' },
+            { id: 14, name: '都ホテル 岐阜長良川', prefecture: '岐阜', location: '岐阜市', price: 18000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '長良川と金華山を一望できるシティホテル。フィットネスクラブも無料で利用でき、アクティブなお父様にも喜ばれます。レストランでの記念日対応は要相談。', touristSpots: '岐阜城、長良川（ホテルから一望）' },
+            { id: 15, name: '飛騨高山温泉 宝生閣', prefecture: '岐阜', location: '高山市', price: 19000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '飛騨高山の古い町並みに近い温泉旅館。観光の拠点として非常に便利で、散策を楽しんだ後、温泉でゆっくりできます。', touristSpots: '高山の古い町並み、宮川朝市（徒歩圏内）' },
+            { id: 16, name: '小川屋', prefecture: '岐阜', location: '下呂市', price: 17500, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '下呂温泉の老舗旅館。畳敷きの館内と100帖空間の畳風呂が特徴。記念日プランも用意されており、ゆったりとしたお祝いができます。', touristSpots: '下呂温泉街の散策' },
+            { id: 17, name: '都リゾート 飛騨高山', prefecture: '岐阜', location: '高山市', price: 21000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '高山駅から徒歩圏内のリゾートホテル。温泉大浴場やスパも完備。上質な空間でくつろぎの時間を過ごせます。', touristSpots: '高山陣屋、古い町並み（徒歩圏内）' },
+
+            { id: 18, name: 'Bali & Resort SAYAの風', prefecture: '三重', location: '鳥羽市', price: 22800, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: 'オールインクルーシブのバリ風リゾート。飲み放題はもちろん、カラオケや岩盤浴も料金内。お酒好きのお父様には最高のプレゼントです。', touristSpots: '鳥羽水族館（車で約6分）、伊勢神宮（車で約30分）' },
+            { id: 19, name: '絶景海風癒し庵 新八屋', prefecture: '三重', location: '鳥羽市', price: 17500, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: '太平洋を一望できる絶景の宿。還暦向けプランがあり、期間限定でラウンジでの飲み放題も実施。海の幸と共に祝うのに最適です。', touristSpots: '鳥羽水族館、ミキモト真珠島（車で約20分）' },
+            { id: 20, name: '伊勢志摩 温泉掛け流しの宿 ねぼーや 志摩別邸', prefecture: '三重', location: '志摩市', price: 22660, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '全室露天風呂付きの離れ形式の宿。プライベートな空間で源泉かけ流しの温泉と伊勢志摩の美食を堪能できます。', touristSpots: '志摩スペイン村、英虞湾クルーズ' },
+            { id: 21, name: '都リゾート 奥志摩 アクアフォレスト', prefecture: '三重', location: '志摩市', price: 19000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: false, privateDining: false }, description: '伊勢志摩国立公園内にある広大なリゾート。温泉、プール、天文館など施設が充実しており、家族みんなで楽しめます。', touristSpots: '志摩スペイン村、横山展望台' },
+            { id: 22, name: '大江戸温泉物語Premium 鳥羽彩朝楽', prefecture: '三重', location: '鳥羽市', price: 16000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: '鳥羽湾を望むインフィニティ露天風呂が自慢。夕食はバイキング形式で、別料金でアルコール飲み放題も付けられます。', touristSpots: '鳥羽水族館、ミキモト真珠島' },
+            { id: 23, name: '大江戸温泉物語Premium 伊勢志摩', prefecture: '三重', location: '志摩市', price: 17000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: '英虞湾を望む絶景露天風呂と海の幸バイキングが自慢。プレミアムラウンジではドリンクサービスも。コストパフォーマンスに優れています。', touristSpots: '横山展望台、ともいきの国伊勢忍者キングダム' },
+            { id: 24, name: '火の谷温泉 美杉リゾート', prefecture: '三重', location: '津市', price: 15000, features: { kanrekiPlan: false, chanchanko: false, allYouCanDrink: true, privateDining: false }, description: '自然に囲まれた総合リゾート。多彩な温泉やプールがあり、食事はバイキングや会席を選べます。飲み放題プランも人気です。', touristSpots: '周辺の森林セラピーロード、赤目四十八滝（車でアクセス）' },
+            { id: 25, name: '湯元 榊原舘', prefecture: '三重', location: '津市', price: 18500, features: { kanrekiPlan: true, chanchanko: false, allYouCanDrink: false, privateDining: true }, description: '清少納言ゆかりの「七栗の湯」として知られる美肌の湯。源泉かけ流しの温泉と、個室でいただく季節の会席料理で、落ち着いたお祝いができます。', touristSpots: 'ルーブル彫刻美術館、榊原温泉周辺の散策' }
         ];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const grid = document.getElementById('hotel-grid');
-            const modal = document.getElementById('modal');
-            const modalContent = document.getElementById('modal-content');
-            const filterBtns = document.querySelectorAll('.filter-btn');
+        let chart;
+        const filters = {
+            prefecture: 'all',
+            budget: 25000,
+            features: []
+        };
+
+        const prefectureFilters = document.getElementById('prefecture-filters');
+        const budgetSlider = document.getElementById('budget-slider');
+        const budgetValue = document.getElementById('budget-value');
+        const featureFilters = document.getElementById('feature-filters');
+        const hotelGrid = document.getElementById('hotel-grid');
+        const resultsCount = document.getElementById('results-count');
+        
+        const modal = document.getElementById('hotel-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('ja-JP').format(value);
+        }
+
+        function createHotelCard(hotel) {
+            const card = document.createElement('div');
+            card.className = 'hotel-card bg-white rounded-xl shadow-md overflow-hidden cursor-pointer';
+            card.addEventListener('click', () => openModal(hotel));
             
-            let activeFilter = 'all';
+            let featureIcons = '';
+            if (hotel.features.kanrekiPlan) featureIcons += '<span class="mr-2" title="還暦祝いプラン">🎉</span>';
+            if (hotel.features.chanchanko) featureIcons += '<span class="mr-2" title="ちゃんちゃんこ貸出">👘</span>';
+            if (hotel.features.allYouCanDrink) featureIcons += '<span class="mr-2" title="飲み放題">🍻</span>';
+            if (hotel.features.privateDining) featureIcons += '<span class="mr-2" title="個室食">🍽️</span>';
 
-            function renderCards() {
-                grid.innerHTML = '';
-                const filteredData = hotelData.filter(hotel => activeFilter === 'all' || hotel.prefecture === activeFilter);
-
-                if (filteredData.length === 0) {
-                    grid.innerHTML = `<p class="text-center text-gray-500 col-span-full">このエリアに該当する宿はありません。</p>`;
-                } else {
-                    filteredData.forEach(hotel => {
-                        const card = document.createElement('div');
-                        card.className = 'bg-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-1 transition-transform duration-300 cursor-pointer';
-                        card.innerHTML = `
-                            <div class="p-6">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h3 class="text-xl font-bold text-accent">${hotel.name}</h3>
-                                    <span class="text-sm font-semibold bg-accent-light text-accent px-3 py-1 rounded-full">${hotel.prefecture}</span>
-                                </div>
-                                <p class="text-gray-600 mb-4">${hotel.location}</p>
-                                <p class="text-lg font-semibold text-gray-800 mb-4">"${hotel.tagline}"</p>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xl font-bold text-gray-700">${hotel.price}</span>
-                                    <button class="details-btn btn bg-accent text-white py-2 px-4 rounded-full font-bold">詳細を見る</button>
-                                </div>
-                            </div>
-                        `;
-                        card.addEventListener('click', () => showModal(hotel));
-                        grid.appendChild(card);
-                    });
-                }
-                renderChart(filteredData);
-            }
-
-            function showModal(hotel) {
-                modalContent.innerHTML = `
-                    <div class="p-6 md:p-8">
-                        <div class="flex justify-between items-center mb-4">
-                            <div>
-                                <h2 class="text-2xl md:text-3xl font-bold text-accent">${hotel.name}</h2>
-                                <p class="text-gray-600">${hotel.prefecture} ${hotel.location}</p>
-                            </div>
-                            <button id="close-modal" class="text-3xl text-gray-500 hover:text-accent">&times;</button>
-                        </div>
-
-                        <div class="space-y-6">
-                            <div>
-                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">${hotel.celebration.title}</h4>
-                                <p class="text-gray-700">${hotel.celebration.details}</p>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">🍶 お食事と飲み物</h4>
-                                <p class="text-gray-700 mb-2"><strong>食事:</strong> ${hotel.meals}</p>
-                                <p class="text-gray-700"><strong>飲み放題:</strong> <span class="${hotel.drinks.available ? 'text-green-600' : 'text-red-600'} font-bold">${hotel.drinks.available ? 'あり' : 'なし'}</span> ${hotel.drinks.note}</p>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">♨️ 施設</h4>
-                                <p class="text-gray-700">${hotel.facility}</p>
-                            </div>
-                            <div>
-                                <h4 class="text-lg font-bold border-l-4 border-accent pl-2 mb-2">🏞️ 周辺観光</h4>
-                                <ul class="list-disc list-inside text-gray-700">
-                                    ${hotel.tourism.map(spot => `<li><strong>${spot.name}:</strong> ${spot.distance}</li>`).join('')}
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="mt-8 text-center">
-                            <a href="${hotel.link}" target="_blank" rel="noopener noreferrer" class="btn inline-block bg-accent text-white py-3 px-8 rounded-full font-bold text-lg shadow-lg">公式サイトで確認する</a>
-                        </div>
+            card.innerHTML = `
+                <div class="p-6">
+                    <div class="flex justify-between items-start">
+                        <p class="text-sm font-semibold text-gray-500">${hotel.prefecture}県・${hotel.location}</p>
+                        <p class="text-lg font-bold text-[#006D77]">${formatCurrency(hotel.price)}円～</p>
                     </div>
-                `;
-                modal.classList.remove('opacity-0', 'pointer-events-none');
-                modalContent.classList.remove('scale-95');
-                document.getElementById('close-modal').addEventListener('click', hideModal);
-            }
+                    <h4 class="font-bold text-xl mt-1">${hotel.name}</h4>
+                    <p class="text-gray-600 mt-2 text-sm h-10 overflow-hidden">${hotel.description}</p>
+                    <div class="mt-4 text-xl">${featureIcons}</div>
+                </div>
+            `;
+            return card;
+        }
 
-            function hideModal() {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-                modalContent.classList.add('scale-95');
-            }
-
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    hideModal();
-                }
+        function renderHotels() {
+            hotelGrid.innerHTML = '';
+            const filteredHotels = hotelData.filter(hotel => {
+                const prefectureMatch = filters.prefecture === 'all' || hotel.prefecture === filters.prefecture;
+                const budgetMatch = hotel.price <= filters.budget;
+                const featureMatch = filters.features.every(feature => hotel.features[feature]);
+                return prefectureMatch && budgetMatch && featureMatch;
             });
             
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    filterBtns.forEach(b => b.classList.replace('bg-accent','bg-white').classList.replace('text-white', 'text-black'));
-                    btn.classList.replace('bg-white','bg-accent').classList.replace('text-black','text-white');
-                    activeFilter = btn.dataset.filter;
-                    renderCards();
-                });
+            filteredHotels.forEach(hotel => {
+                hotelGrid.appendChild(createHotelCard(hotel));
             });
 
-            let hotelChart = null;
-            function renderChart(data) {
-                const ctx = document.getElementById('hotelChart').getContext('2d');
-                const labels = data.map(h => h.name);
-                const celebrationData = data.map(h => h.scores.celebration);
-                const foodData = data.map(h => h.scores.food);
-                const tourismData = data.map(h => h.scores.tourism);
-                const atmosphereData = data.map(h => h.scores.atmosphere);
+            resultsCount.textContent = filteredHotels.length;
+            updateChart(filteredHotels);
+        }
+        
+        function updateChart(data) {
+             const ctx = document.getElementById('budget-chart').getContext('2d');
+             if (chart) {
+                chart.destroy();
+            }
+             
+            const sortedData = [...data].sort((a, b) => a.price - b.price);
 
-                if (hotelChart) {
-                    hotelChart.destroy();
-                }
-
-                hotelChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: '還暦祝いサービス',
-                                data: celebrationData,
-                                backgroundColor: 'rgba(164, 42, 40, 0.7)',
-                                borderColor: 'rgba(164, 42, 40, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: '食事の特別感',
-                                data: foodData,
-                                backgroundColor: 'rgba(211, 184, 184, 0.7)',
-                                borderColor: 'rgba(211, 184, 184, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: '観光の利便性',
-                                data: tourismData,
-                                backgroundColor: 'rgba(90, 90, 90, 0.6)',
-                                borderColor: 'rgba(90, 90, 90, 1)',
-                                borderWidth: 1
-                            },
-                            {
-                                label: '雰囲気',
-                                data: atmosphereData,
-                                backgroundColor: 'rgba(150, 150, 150, 0.6)',
-                                borderColor: 'rgba(150, 150, 150, 1)',
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        indexAxis: 'y',
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                max: 5,
-                                grid: {
-                                    color: 'rgba(0,0,0,0.05)'
-                                }
-                            },
-                            y: {
-                                grid: {
-                                    display: false
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedData.map(h => h.name),
+                    datasets: [{
+                        label: '1名あたり最低料金(円)',
+                        data: sortedData.map(h => h.price),
+                        backgroundColor: sortedData.map(h => {
+                            if (h.prefecture === '愛知') return '#83C5BE';
+                            if (h.prefecture === '岐阜') return '#EDDCD2';
+                            if (h.prefecture === '三重') return '#FFDDD2';
+                            return '#E29578';
+                        }),
+                        borderColor: '#ffffff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    return value.toLocaleString('ja-JP', { style: 'currency', currency: 'JPY' });
                                 }
                             }
                         },
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
+                        y: {
+                           ticks: {
+                                autoSkip: false,
+                                font: {
+                                    size: 10
+                                }
+                           }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                             callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += new Intl.NumberFormat('ja-JP', { style: 'currency', currency: 'JPY' }).format(context.parsed.x);
+                                    }
+                                    return label;
+                                }
                             }
                         }
                     }
-                });
-            }
+                }
+            });
+        }
+        
+        function openModal(hotel) {
+            modalTitle.textContent = hotel.name;
+            modalBody.innerHTML = `
+                <p class="text-sm font-semibold text-gray-500">${hotel.prefecture}県・${hotel.location}</p>
+                <p class="text-lg font-bold text-[#006D77] mt-1">${formatCurrency(hotel.price)}円～ / 1名</p>
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="font-bold text-lg">宿の魅力</h4>
+                    <p class="mt-1 text-gray-700">${hotel.description}</p>
+                </div>
+                <div class="mt-4 border-t pt-4">
+                    <h4 class="font-bold text-lg">周辺の観光スポット</h4>
+                    <p class="mt-1 text-gray-700">${hotel.touristSpots}</p>
+                </div>
+                <div class="mt-6 text-center">
+                    <a href="#" class="inline-block bg-[#006D77] text-white font-bold py-2 px-6 rounded-lg hover:bg-opacity-80 transition-colors">予約サイトで確認する</a>
+                    <p class="text-xs text-gray-500 mt-2">（これはサンプルです。実際の予約サイトには遷移しません。）</p>
+                </div>
+            `;
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            document.body.style.overflow = 'hidden';
+        }
 
-            renderCards();
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            setTimeout(() => {
+                modal.classList.add('pointer-events-none');
+                 document.body.style.overflow = 'auto';
+            }, 250);
+        }
+
+        prefectureFilters.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                prefectureFilters.querySelector('.active').classList.remove('active');
+                e.target.classList.add('active');
+                filters.prefecture = e.target.dataset.value;
+                renderHotels();
+            }
         });
+        
+        featureFilters.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                e.target.classList.toggle('active');
+                const value = e.target.dataset.value;
+                if (filters.features.includes(value)) {
+                    filters.features = filters.features.filter(f => f !== value);
+                } else {
+                    filters.features.push(value);
+                }
+                renderHotels();
+            }
+        });
+
+        budgetSlider.addEventListener('input', (e) => {
+            filters.budget = e.target.value;
+            budgetValue.textContent = formatCurrency(e.target.value);
+        });
+
+        budgetSlider.addEventListener('change', renderHotels);
+        
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', renderHotels);
     </script>
 </body>
 </html>
